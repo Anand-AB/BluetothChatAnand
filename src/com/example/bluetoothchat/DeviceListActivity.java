@@ -162,9 +162,15 @@ public class DeviceListActivity extends Activity {
 			Intent intent = new Intent();
 			intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
 
-			// Set result and finish this Activity
-			setResult(Activity.RESULT_OK, intent);
-			finish();
+			  // Set result and finish this Activity
+            setResult(Activity.RESULT_OK, intent);
+            finish();
+            
+//			// Set result and finish this Activity
+//			Intent min=new Intent(getApplicationContext(),ChatActivity.class);
+//			min.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//			getApplicationContext().startActivity(min);
+
 		}
 	};
 

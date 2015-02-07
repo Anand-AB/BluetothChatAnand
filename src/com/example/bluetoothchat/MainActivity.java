@@ -21,7 +21,7 @@ public class MainActivity extends ActionBarActivity  {
 
 	public void search(View v)
 	{
-		Toast.makeText(getApplicationContext(), "Plus touched", Toast.LENGTH_SHORT).show();
+		Toast.makeText(getApplicationContext(), "Plustouched", Toast.LENGTH_SHORT).show();
 
 		startActivity(new Intent(this,SearchActivity.class));
 

@@ -37,6 +37,10 @@
             android:name="com.example.bluetoothchat.SearchActivity"
             android:label="@string/app_name" >
         </activity>
+        <activity
+            android:name="com.example.bluetoothchat.ChatActivity"
+            android:label="@string/app_name" >
+        </activity>
     </application>
 
 </manifest>

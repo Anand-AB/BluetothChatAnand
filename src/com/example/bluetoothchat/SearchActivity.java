@@ -1,6 +1,8 @@
 package com.example.bluetoothchat;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +12,11 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 public class SearchActivity extends SampleActivityBase {
+
+	private BluetoothChatService mChatService = null;
+
+
+	BluetoothChatFragment bf=new BluetoothChatFragment();
 
 	public final int REQUEST_ENABLE_BT_CONST=1;
 	private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
@@ -23,22 +30,73 @@ public class SearchActivity extends SampleActivityBase {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_search);
 
-		//		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		//		if(mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()){
-		//			bluetoothEnabled=true;
-		//			new ConnectionAcceptThread(mBluetoothAdapter).start();
-		//
-		//		}
+		//				mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+		//				if(mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()){
+		//					bluetoothEnabled=true;
+		//					new ConnectionAcceptThread(mBluetoothAdapter).start();
+		//		
+		//				}
 
 
 	}
 
-	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case REQUEST_CONNECT_DEVICE_SECURE:
+			//Toast.makeText(getApplicationContext(), "Chat Activity", Toast.LENGTH_SHORT).show();
+			// When DeviceListActivity returns with a device to connect
+			if (resultCode == Activity.RESULT_OK) {
+
+				connectDevice(data, true);
+				// Get the device MAC address
+				//				String address = data.getExtras()
+				//						.getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+				//				BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+				//				//				
+				//				// Attempt to connect to the device
+				//				boolean secure=false;
+				//				mChatService.connect(device, secure);
+				startActivity(new Intent(this,ChatActivity.class));
+			}
+			break;
+			//		case REQUEST_CONNECT_DEVICE_INSECURE:
+			//			// When DeviceListActivity returns with a device to connect
+			//			if (resultCode == Activity.RESULT_OK) {
+			//				connectDevice(data, false);
+			//			}
+			//			break;
+			//		case REQUEST_ENABLE_BT:
+			//			// When the request to enable Bluetooth returns
+			//			if (resultCode == Activity.RESULT_OK) {
+			//				// Bluetooth is now enabled, so set up a chat session
+			//				setupChat();
+			//			} else {
+			//				// User did not enable Bluetooth or an error occurred
+			//				Log.d(TAG, "BT not enabled");
+			//				Toast.makeText(getApplicationContext(), R.string.bt_not_enabled_leaving,
+			//						Toast.LENGTH_SHORT).show();
+			//				//getApplicationContext().finish();
+			//			}
+		}
+	}
+
+	private void connectDevice(Intent data, boolean secure) {
+		// Get the device MAC address
+		String address = data.getExtras()
+				.getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+		// Get the BluetoothDevice object
+		BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+		// Attempt to connect to the device
+		mChatService.connect(device, secure);
+	}
+
+
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.main, menu);
-	    return true;
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.main, menu);
+		return true;
 	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -46,7 +104,7 @@ public class SearchActivity extends SampleActivityBase {
 		switch ( item.getItemId()) {
 		case R.id.action_list_pired_devices:
 			Intent serverIntent = new Intent(getApplicationContext(), DeviceListActivity.class);
-			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+			startActivityForResult(serverIntent,REQUEST_CONNECT_DEVICE_SECURE);
 			return true;
 
 			//		case R.id.action_scan_devices:
