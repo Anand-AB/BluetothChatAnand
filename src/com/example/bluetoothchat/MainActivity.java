@@ -14,6 +14,7 @@ public class MainActivity extends ActionBarActivity  {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		
 
 
 		((ListView) findViewById(R.id.my_main_listview)).setAdapter((new UserAdapter(getApplicationContext(), createDummyUserModels())));
@@ -23,7 +24,7 @@ public class MainActivity extends ActionBarActivity  {
 	{
 		Toast.makeText(getApplicationContext(), "Plustouched", Toast.LENGTH_SHORT).show();
 
-		startActivity(new Intent(this,SearchActivity.class));
+		startActivity(new Intent(this,ChatActivity.class));
 
 	}
 	public UserModel[] createDummyUserModels(){

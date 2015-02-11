@@ -3,8 +3,10 @@ package com.example.bluetoothchat;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,9 +17,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -72,9 +71,38 @@ public class BluetoothChatFragment extends Fragment {
 	private BluetoothChatService mChatService = null;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) { 
+
+
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
+
+
+		AlertDialog.Builder build=new AlertDialog.Builder(getActivity());
+		build.setMessage("Connect A Device.");
+		//build.setCancelable(false);
+		build.setPositiveButton("Connect A Device", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// Launch the DeviceListActivity to see devices and do scan
+				Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
+				startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+
+
+			}
+		});
+		build.setNegativeButton("Turn On/Off Bluetooth", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				checkBluetoothStatus();
+
+			}
+		});
+		AlertDialog alert=build.create();
+		alert.show();
+
 		// Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -88,9 +116,10 @@ public class BluetoothChatFragment extends Fragment {
 		{
 			bluetoothEnabled=true;
 		}
+
 	}
-
-
+	
+	
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -104,6 +133,12 @@ public class BluetoothChatFragment extends Fragment {
 			setupChat();
 		}
 	}
+
+	//	@Override
+	//	public void onStart() {
+	//		super.onStart();
+	//		
+	//	}
 
 	@Override
 	public void onDestroy() {
@@ -143,10 +178,57 @@ public class BluetoothChatFragment extends Fragment {
 		mSendButton = (Button) view.findViewById(R.id.button_send);
 	}
 
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case REQUEST_CONNECT_DEVICE_SECURE:
+			// When DeviceListActivity returns with a device to connect
+			if (resultCode == Activity.RESULT_OK) {
+				connectDevice(data, true);
+			}
+			break;
+			//            case REQUEST_CONNECT_DEVICE_INSECURE:
+			//                // When DeviceListActivity returns with a device to connect
+			//                if (resultCode == Activity.RESULT_OK) {
+			//                    connectDevice(data, false);
+			//                }
+			//                break;
+			//            case REQUEST_ENABLE_BT:
+			//                // When the request to enable Bluetooth returns
+			//                if (resultCode == Activity.RESULT_OK) {
+			//                    // Bluetooth is now enabled, so set up a chat session
+			//                    setupChat();
+			//                } else {
+			//                    // User did not enable Bluetooth or an error occurred
+			//                    Log.d(TAG, "BT not enabled");
+			//                    Toast.makeText(getActivity(), R.string.bt_not_enabled_leaving,
+			//                            Toast.LENGTH_SHORT).show();
+			//                    getActivity().finish();
+			//                }
+		}
+	}
+
+	private void checkBluetoothStatus(){
+		FragmentActivity activity = getActivity();
+		if (mBluetoothAdapter == null) {
+			// Device does not support Bluetooth
+			Toast.makeText(activity, "No Bluetooth found",Toast.LENGTH_SHORT).show();
+			bluetoothEnabled=false;
+		}
+		else if (!mBluetoothAdapter.isEnabled()) {
+			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT_CONST);
+			Toast.makeText(activity, "Please Turn on Bluetooth", Toast.LENGTH_LONG).show();
+
+		}
+		else if(mBluetoothAdapter!=null && mBluetoothAdapter.isEnabled()){
+			Toast.makeText(activity, "Turning off Bluetooth", Toast.LENGTH_LONG).show();
+			mBluetoothAdapter.disable();
+		}
+	}
+
 	/**
 	 * Set up the UI and background operations for chat.
 	 */
-	private void setupChat() {
+	public  void setupChat() {
 		Log.d(TAG, "setupChat()");
 
 		// Initialize the array adapter for the conversation thread
@@ -180,14 +262,14 @@ public class BluetoothChatFragment extends Fragment {
 	/**
 	 * Makes this device discoverable.
 	 */
-//	private void ensureDiscoverable() {
-//		if (mBluetoothAdapter.getScanMode() !=
-//				BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-//			Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//			discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-//			startActivity(discoverableIntent);
-//		}
-//	}
+	//	private void ensureDiscoverable() {
+	//		if (mBluetoothAdapter.getScanMode() !=
+	//				BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+	//			Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+	//			discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+	//			startActivity(discoverableIntent);
+	//		}
+	//	}
 
 	/**
 	 * Sends a message.
@@ -265,7 +347,7 @@ public class BluetoothChatFragment extends Fragment {
 	/**
 	 * The Handler that gets information back from the BluetoothChatService
 	 */
-	private final Handler mHandler = new Handler() {
+	public final Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			FragmentActivity activity = getActivity();
@@ -315,34 +397,34 @@ public class BluetoothChatFragment extends Fragment {
 		}
 	};
 
-//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//		switch (requestCode) {
-//		case REQUEST_CONNECT_DEVICE_SECURE:
-//			// When DeviceListActivity returns with a device to connect
-//			if (resultCode == Activity.RESULT_OK) {
-//				connectDevice(data, true);
-//			}
-//			break;
-//		case REQUEST_CONNECT_DEVICE_INSECURE:
-//			// When DeviceListActivity returns with a device to connect
-//			if (resultCode == Activity.RESULT_OK) {
-//				connectDevice(data, false);
-//			}
-//			break;
-//		case REQUEST_ENABLE_BT:
-//			// When the request to enable Bluetooth returns
-//			if (resultCode == Activity.RESULT_OK) {
-//				// Bluetooth is now enabled, so set up a chat session
-//				setupChat();
-//			} else {
-//				// User did not enable Bluetooth or an error occurred
-//				Log.d(TAG, "BT not enabled");
-//				Toast.makeText(getActivity(), "Bluetooth not enabled",
-//						Toast.LENGTH_SHORT).show();
-//				getActivity().finish();
-//			}
-//		}
-//	}
+	//	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	//		switch (requestCode) {
+	//		case REQUEST_CONNECT_DEVICE_SECURE:
+	//			// When DeviceListActivity returns with a device to connect
+	//			if (resultCode == Activity.RESULT_OK) {
+	//				connectDevice(data, true);
+	//			}
+	//			break;
+	//		case REQUEST_CONNECT_DEVICE_INSECURE:
+	//			// When DeviceListActivity returns with a device to connect
+	//			if (resultCode == Activity.RESULT_OK) {
+	//				connectDevice(data, false);
+	//			}
+	//			break;
+	//		case REQUEST_ENABLE_BT:
+	//			// When the request to enable Bluetooth returns
+	//			if (resultCode == Activity.RESULT_OK) {
+	//				// Bluetooth is now enabled, so set up a chat session
+	//				setupChat();
+	//			} else {
+	//				// User did not enable Bluetooth or an error occurred
+	//				Log.d(TAG, "BT not enabled");
+	//				Toast.makeText(getActivity(), "Bluetooth not enabled",
+	//						Toast.LENGTH_SHORT).show();
+	//				getActivity().finish();
+	//			}
+	//		}
+	//	}
 
 	/**
 	 * Establish connection with other divice
@@ -350,8 +432,8 @@ public class BluetoothChatFragment extends Fragment {
 	 * @param data   An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
 	 * @param secure Socket Security type - Secure (true) , Insecure (false)
 	 */
-	
-	
+
+
 	public void connectDevice(Intent data, boolean secure) {
 		// Get the device MAC address
 		String address = data.getExtras()
@@ -362,54 +444,54 @@ public class BluetoothChatFragment extends Fragment {
 		mChatService.connect(device, secure);
 	}
 
-//	@Override
-//	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//		inflater.inflate(R.menu.main, menu);
-//	}
+	//	@Override
+	//	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+	//		inflater.inflate(R.menu.main, menu);
+	//	}
 
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//		FragmentActivity activity = getActivity();
-//		switch ( item.getItemId()) {
-//		case R.id.action_list_pired_devices:
-//			Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-//			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-//			return true;
-//
-//			//		case R.id.action_scan_devices:
-//			//			Toast.makeText(activity, "You pressed Scan",Toast.LENGTH_SHORT).show();
-//			//			scanBluetoothDevices();
-//			//			doDiscovery();
-//			//			return true;
-//
-//		case R.id.action_turn_on:
-//			Toast.makeText(activity, "You pressed Turn On/Off",Toast.LENGTH_SHORT).show();
-//			checkBluetoothStatus();
-//			return true;
-//
-//		default:
-//			break;
-//		}
-//		return true;
-//	}
-//
-//	private void checkBluetoothStatus(){
-//		FragmentActivity activity = getActivity();
-//		if (mBluetoothAdapter == null) {
-//			// Device does not support Bluetooth
-//			Toast.makeText(activity, "No Bluetooth found",Toast.LENGTH_SHORT).show();
-//			bluetoothEnabled=false;
-//		}
-//		else if (!mBluetoothAdapter.isEnabled()) {
-//			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT_CONST);
-//			Toast.makeText(activity, "Please Turn on Bluetooth", Toast.LENGTH_LONG).show();
-//
-//		}
-//		else if(mBluetoothAdapter!=null && mBluetoothAdapter.isEnabled()){
-//			Toast.makeText(activity, "Turning off Bluetooth", Toast.LENGTH_LONG).show();
-//			mBluetoothAdapter.disable();
-//		}
-//	}
+	//	@Override
+	//	public boolean onOptionsItemSelected(MenuItem item) {
+	//		FragmentActivity activity = getActivity();
+	//		switch ( item.getItemId()) {
+	//		case R.id.action_list_pired_devices:
+	//			Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
+	//			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+	//			return true;
+	//
+	//			//		case R.id.action_scan_devices:
+	//			//			Toast.makeText(activity, "You pressed Scan",Toast.LENGTH_SHORT).show();
+	//			//			scanBluetoothDevices();
+	//			//			doDiscovery();
+	//			//			return true;
+	//
+	//		case R.id.action_turn_on:
+	//			Toast.makeText(activity, "You pressed Turn On/Off",Toast.LENGTH_SHORT).show();
+	//			checkBluetoothStatus();
+	//			return true;
+	//
+	//		default:
+	//			break;
+	//		}
+	//		return true;
+	//	}
+	//
+	//	private void checkBluetoothStatus(){
+	//		FragmentActivity activity = getActivity();
+	//		if (mBluetoothAdapter == null) {
+	//			// Device does not support Bluetooth
+	//			Toast.makeText(activity, "No Bluetooth found",Toast.LENGTH_SHORT).show();
+	//			bluetoothEnabled=false;
+	//		}
+	//		else if (!mBluetoothAdapter.isEnabled()) {
+	//			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT_CONST);
+	//			Toast.makeText(activity, "Please Turn on Bluetooth", Toast.LENGTH_LONG).show();
+	//
+	//		}
+	//		else if(mBluetoothAdapter!=null && mBluetoothAdapter.isEnabled()){
+	//			Toast.makeText(activity, "Turning off Bluetooth", Toast.LENGTH_LONG).show();
+	//			mBluetoothAdapter.disable();
+	//		}
+	//	}
 
 	//	private void listPairedDevices() {
 	//
